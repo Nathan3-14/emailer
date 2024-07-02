@@ -6,8 +6,8 @@ from email.mime.multipart import MIMEMultipart
 console = Console()
 
 count = 20
-# to = "Josepn <josepn.williams@oasisbrislington.org>"
-to = "Joseph <josepn.williams@oasisbrislington.org>"
+# to = "Joseph <josepn.williams@oasisbrislington.org>"
+to = "Nathan <nathan.watson.172>@gmail.com"
 
 
 usrpass = open("./s--usr.pass", "r").readlines()
