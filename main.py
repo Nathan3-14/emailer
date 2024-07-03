@@ -7,8 +7,8 @@ from email.mime.text import MIMEText
 console = Console()
 
 #? Changable Parameters
-count = 1
-to = "Nathan <nathan.watson.172@gmail.com>"
+count = 50
+to = "Ethan <ethan.denton@oasisbrislington.org>"
 filename = "./email.html"
 subject = "Funny Email"
 
