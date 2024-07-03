@@ -66,10 +66,15 @@ def interpret_email(file_path: str):
             "email": {
                 "type": "object",
                 "properties": {
-
-                }
+                    "to": {"type": "string"},
+                    "subject": {"type": "string"},
+                    "html": {"type": "object"},
+                    "attachments": {"type": "array"}
+                },
+                "required": ["to", "html"]
             }
-        }
+        },
+        "required": ["email"]
     }
 
     with open(file_path, "r") as f:
