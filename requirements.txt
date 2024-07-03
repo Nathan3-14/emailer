@@ -1,2 +1,2 @@
 xmltodict>=0.13.0
-jsonschema>=43.22.0
+jsonschema>=3.22.0
