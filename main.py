@@ -5,6 +5,7 @@ import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import xmltodict
+import dicttoxml
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
@@ -20,7 +21,7 @@ print_json = lambda _dict: console.print_json(json.dumps(_dict))
 
 def send_emails(email_name: str, email_address: str, subject: str, file: str="./email.xml", secret_path: str="./s--usr.pass"):
     #? Changable Parameters
-    count = 1
+    count = 100
     to = f"{email_name} <{email_address}>"
     filename = file
     subject = subject
@@ -80,12 +81,21 @@ def interpret_email(file_path: str):
     with open(file_path, "r") as f:
         email_xml = f.read()
     
-    email_json = xmltodict.parse(email_xml)
-    if _validate(email_json, email_schema):
-        print("Correct Email")
-    else:
+    email_dict = xmltodict.parse(email_xml)
+    if not _validate(email_dict, email_schema):
         print("Bad Email")
         return
     
+    email_dict = email_dict["email"]
+    to = email_dict["to"]
+    subject = email_dict["subject"]
+    html_dict = email_dict["html"]
+    html = dicttoxml.dicttoxml(html_dict, custom_root="html")
+
+    print(to)
+    print(subject)
+    print(html)
+
     
-interpret_email("./email.xml")
+# interpret_email("./email.xml")
+send_emails("Nathan", "nathan.watson@oasisbrislington.org", "trolled", "./email.html")
