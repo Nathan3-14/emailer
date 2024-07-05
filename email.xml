@@ -4,12 +4,29 @@
 
     <html>
         <body>
-            <h1>Cool Title!!!</h1>
-            <p>Cool Paragraph!!!</p>
-            <p>Haha get sent 50 emails lol</p>
-            <p>Cool, random image</p>
-            <img src="https://picsum.photos/256/128" />
-            <button onclick="alert('hi')">Test</button>
+            <style>
+                .nice {
+                    background-color: darkslategrey;
+                    color: white;
+                }
+                #main {
+                    background-color: green;
+                }
+                #backdrop {
+                    backdrop-filter: blur(10px);
+                }
+            </style>
+            <div id="main">
+                <h1>Cool Title!!!</h1>
+                <p class="nice">Cool Paragraph!!!</p>
+                <p class="nice">Haha get sent 50 emails lol</p>
+                <p class="nice">Cool, random image</p>
+                <img src="https://picsum.photos/256/128" />
+                <div id="backdrop">
+                    <h3>This is in a div!</h3>
+                    <p>Here's a paragraph</p>
+                </div>
+            </div>
         </body>
     </html>
 </email>

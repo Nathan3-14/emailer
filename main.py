@@ -2,12 +2,21 @@ import json
 import smtplib
 from rich.console import Console
 import datetime
+import xmltodict
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import xmltodict
-import dicttoxml
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
+
+console = Console()
+print_json = lambda _dict: console.print_json(json.dumps(_dict))
+
+def log(message):
+    time = datetime.datetime.now()
+    console.print(f"[grey]\[{time.strftime('%H:%M:%S')}\][/grey] {message}")
+    
 
 def _validate(instance, schema) -> bool:
     try:
@@ -16,14 +25,11 @@ def _validate(instance, schema) -> bool:
         return False
     return True
 
-console = Console()
-print_json = lambda _dict: console.print_json(json.dumps(_dict))
-
-def send_emails(email_name: str, email_address: str, subject: str, file: str="./email.xml", secret_path: str="./s--usr.pass"):
+def send_emails(email_name: str, email_address: str, subject: str, email_content: str | ET.Element="./email.hmtl", secret_path: str="./s--usr.pass", count: int=1):
     #? Changable Parameters
-    count = 100
+    count = count
     to = f"{email_name} <{email_address}>"
-    filename = file
+    filename = email_content if type(email_content) == str else None
     subject = subject
 
     #? Login Info
@@ -40,22 +46,25 @@ def send_emails(email_name: str, email_address: str, subject: str, file: str="./
     message["From"] = sent_from
     message["To"] = sent_to
 
-    html = open(filename, "r").read()
+    if filename == None:
+        raw_string = ET.tostring(email_content)
+        parsed_string = minidom.parseString(raw_string)
+        pretty_string = parsed_string.toprettyxml(indent="  ")
+        html = "".join([line.strip() for line in pretty_string.split("\n") if line.strip()])
+    else:
+        html = open(filename, "r").read()
     part1 = MIMEText(html, "html")
     message.attach(part1)
 
     try:
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server. ehlo()
+        server.ehlo()
         server.login(gmail_user, gmail_app_password)
-        console.print("[bright_green bold]Logged in[/bright_green bold]")
-        console.print(f"[bright_yellow]Sending {count} emails to {to}[/bright_yellow]")
+        console.log("[bright_green bold]Logged in[/bright_green bold]")
+        console.log(f"[bright_yellow]Sending {count} emails to {to}[/bright_yellow]")
         for i in range(count):
-            t_start = datetime.datetime.now()
             server.sendmail(sent_from, sent_to, message.as_string())
-            t_end = datetime.datetime.now()
-            t_dif = t_end - t_start
-            console.print(f"[bright_cyan]  Sent email {i+1} out of {count} - took {t_dif.microseconds / 1_000_000}secs[/bright_cyan]")
+            console.log(f"[bright_cyan]Sent email {i+1} out of {count}[/bright_cyan]")
         server.close()
     except Exception as exception:
         console.print("[red]Error: %s[/red]\n\n" % exception)
@@ -79,23 +88,22 @@ def interpret_email(file_path: str):
     }
 
     with open(file_path, "r") as f:
-        email_xml = f.read()
+        email_dict = xmltodict.parse(f.read())
     
-    email_dict = xmltodict.parse(email_xml)
+    email_xml = ET.parse(file_path)
+    email_xml_root = email_xml.getroot()
+    
     if not _validate(email_dict, email_schema):
-        print("Bad Email")
+        console.log("[red]Email does not fit schema[/red]")
         return
-    
-    email_dict = email_dict["email"]
-    to = email_dict["to"]
-    subject = email_dict["subject"]
-    html_dict = email_dict["html"]
-    html = dicttoxml.dicttoxml(html_dict, custom_root="html")
-
-    print(to)
-    print(subject)
-    print(html)
 
     
-# interpret_email("./email.xml")
-send_emails("Nathan", "nathan.watson@oasisbrislington.org", "trolled", "./email.html")
+    to = email_xml_root.find("to").text
+    subject = email_xml_root.find("subject").text
+    html = email_xml_root.find("html")
+
+    send_emails("name", to, subject, email_content=html)
+
+    
+interpret_email("./email.xml")
+# send_emails("Nathan", "nathan.watson@oasisbrislington.org", "Here's 10 emails (not 100)", "./email.html")
