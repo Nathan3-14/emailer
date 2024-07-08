@@ -1,4 +1,5 @@
 import json
+import os
 import smtplib
 from rich.console import Console
 import datetime
@@ -9,6 +10,9 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+from xml.parsers.expat import ExpatError
+from xml.etree.ElementTree import ParseError
+import sys
 
 console = Console()
 print_json = lambda _dict: console.print_json(json.dumps(_dict))
@@ -88,22 +92,44 @@ def interpret_email(file_path: str):
     }
 
     with open(file_path, "r") as f:
-        email_dict = xmltodict.parse(f.read())
+        try:
+            email_dict = xmltodict.parse(f.read())
+            dict_errored = False
+        except ExpatError:
+            console.log("[red]Error while parsing xml, cannot convert to dict")
+            dict_errored = True
     
-    email_xml = ET.parse(file_path)
+    try:
+        email_xml = ET.parse(file_path)
+    except ParseError as e:
+        console.log("[red][bold]FATAL[/bold] - Error while parsing xml, cannot get tree[/red]")
+        console.log(f"[dark_red]{e}[/dark_red]")
+        quit()
     email_xml_root = email_xml.getroot()
-    
-    if not _validate(email_dict, email_schema):
-        console.log("[red]Email does not fit schema[/red]")
-        return
+        
+    if not dict_errored:
+        if not _validate(email_dict, email_schema):
+            console.log("[red]Email does not fit schema[/red]")
+            return
 
     
     to = email_xml_root.find("to").text
     subject = email_xml_root.find("subject").text
     html = email_xml_root.find("html")
 
-    send_emails("name", to, subject, email_content=html)
+    send_emails("name", to, subject, email_content=html, count=5)
 
     
-interpret_email("./email.xml")
+# interpret_email("./email.xml")
 # send_emails("Nathan", "nathan.watson@oasisbrislington.org", "Here's 10 emails (not 100)", "./email.html")
+
+fail = False
+if len(sys.argv) != 2:
+    console.log(f"[red]Incorrect arguments supplied. Expected [/red][bright_cyan]main.py <path>[/bright_cyan][red], recieved [/red][bright_cyan]{''.join(sys.argv)}[/bright_cyan][red][/red]")
+    quit()
+else:
+    path = os.path.normpath(f"{os.getcwd()}/{sys.argv[1]}")
+    if not os.path.exists(path):
+        console.log(f"[red]Incorrect arguments supplied. [/red][bright_cyan]{path}[/bright_cyan][red] is not a valid path[/red]")
+        quit()
+    interpret_email(path)
