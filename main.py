@@ -117,19 +117,19 @@ def interpret_email(file_path: str):
     subject = email_xml_root.find("subject").text
     html = email_xml_root.find("html")
 
-    send_emails("name", to, subject, email_content=html, count=5)
+    send_emails("name", to, subject, email_content=html, count=5) #? Change this value to change the number of emails sent
 
     
 # interpret_email("./email.xml")
 # send_emails("Nathan", "nathan.watson@oasisbrislington.org", "Here's 10 emails (not 100)", "./email.html")
 
-fail = False
-if len(sys.argv) != 2:
-    console.log(f"[red]Incorrect arguments supplied. Expected [/red][bright_cyan]main.py <path>[/bright_cyan][red], recieved [/red][bright_cyan]{''.join(sys.argv)}[/bright_cyan][red][/red]")
-    quit()
-else:
-    path = os.path.normpath(f"{os.getcwd()}/{sys.argv[1]}")
-    if not os.path.exists(path):
-        console.log(f"[red]Incorrect arguments supplied. [/red][bright_cyan]{path}[/bright_cyan][red] is not a valid path[/red]")
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        console.log(f"[red]Incorrect arguments supplied. Expected [/red][bright_cyan]main.py <path>[/bright_cyan][red], recieved [/red][bright_cyan]{''.join(sys.argv)}[/bright_cyan][red][/red]")
         quit()
-    interpret_email(path)
+    else:
+        path = os.path.normpath(f"{os.getcwd()}/{sys.argv[1]}")
+        if not os.path.exists(path):
+            console.log(f"[red]Incorrect arguments supplied. [/red][bright_cyan]{path}[/bright_cyan][red] is not a valid path[/red]")
+            quit()
+        interpret_email(path)
