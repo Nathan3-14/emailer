@@ -1,4 +1,5 @@
 import json
+import tqdm
 import os
 import smtplib
 from rich.console import Console
@@ -66,7 +67,7 @@ def send_emails(email_name: str, email_address: str, subject: str, email_content
         server.login(gmail_user, gmail_app_password)
         console.log("[bright_green bold]Logged in[/bright_green bold]")
         console.log(f"[bright_yellow]Sending {count} emails to {to}[/bright_yellow]")
-        for i in range(count):
+        for i in tqdm.tqdm(range(count)):
             server.sendmail(sent_from, sent_to, message.as_string())
             console.log(f"[bright_cyan]Sent email {i+1} out of {count}[/bright_cyan]")
         server.close()
