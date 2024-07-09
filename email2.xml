@@ -1,0 +1,11 @@
+<email>
+    <subject>XML Replace Test</subject>
+    <html>
+        <body>
+            <h1>XML Replace Test</h1>
+            <h3>To <r>name</r></h3>
+            <p>Hello <r>name</r>, your grade has been calculated and is <r>grade</r></p>
+        </body>
+    </html>
+    <data>./email2.csv</data>
+</email>

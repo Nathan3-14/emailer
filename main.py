@@ -30,6 +30,42 @@ def _validate(instance, schema) -> bool:
         return False
     return True
 
+def send_email(to_email: str, subject: str, email_content: ET.Element, secret_path: str="./s--usr.pass"):
+    to = f"<{to_email}>"
+    subject = subject
+    content = email_content
+    secret_path = secret_path
+
+    #? Login Info
+    usrpass = open(secret_path, "r").readlines()
+    gmail_user = usrpass[0].strip()
+    gmail_app_password = usrpass[1].strip()
+
+    sent_from = gmail_user
+    sent_to = to
+
+    message = MIMEMultipart("alternative")
+    message["Subject"] = subject
+    message["From"] = sent_from
+    message["To"] = sent_to
+
+    raw_string = ET.tostring(content)
+    parsed_string = minidom.parseString(raw_string)
+    pretty_string = parsed_string.toprettyxml(indent="  ")
+    content_html = "".join([line.strip() for line in pretty_string.split("\n") if line.strip()])
+
+    message.attach(MIMEText(content_html, "html"))
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(gmail_user, gmail_app_password)
+        console.log("[bright_green bold]Logged in[/bright_green bold]")
+        server.sendmail(sent_from, sent_to, message.as_string())
+        console.log(f"[bright_cyan]Sent email to {to}[/bright_cyan]")
+        server.close()
+    except Exception as exception:
+        console.print("[red]Error: %s[/red]\n\n" % exception)
+
 def send_emails(email_name: str, email_address: str, subject: str, email_content: str | ET.Element="./email.hmtl", secret_path: str="./s--usr.pass", count: int=1):
     #? Changable Parameters
     count = count
@@ -120,6 +156,57 @@ def interpret_email(file_path: str):
 
     send_emails("name", to, subject, email_content=html, count=5) #? Change this value to change the number of emails sent
 
+
+def interpret_email2(email_path: str):
+    email_schema = {
+        "type": "object",
+        "properties": {
+            "email": {
+                "type": "object",
+                "properties": {
+                    "subject": {"type": "string"},
+                    "html": {"type": "object"},
+                    "data": {"type": "string"},
+                    "attachments": {"type": "array"}
+                },
+                "required": ["subject", "html"]
+            }
+        },
+        "required": ["email"]
+    }
+
+    with open(email_path, "r") as f:
+        try:
+            email_dict = xmltodict.parse(f.read())
+            dict_errored = False
+        except ExpatError:
+            console.log("[red]Error while parsing xml, cannot convert to dict")
+            dict_errored = True
+    
+    try:
+        email_xml = ET.parse(email_path)
+    except ParseError as e:
+        console.log("[red][bold]FATAL[/bold] - Error while parsing xml, cannot get tree[/red]")
+        console.log(f"[dark_red]{e}[/dark_red]")
+        quit()
+    email_xml_root = email_xml.getroot()
+        
+    if not dict_errored:
+        if not _validate(email_dict, email_schema):
+            console.log("[red][bold]FATAL[/bold] - Email does not fit schema[/red]")
+            return
+        console.log("[bright_cyan]Email validated, continuing[/bright_cyan]")
+    else:
+        console.log("[bright_cyan]Email failed to validate, continuing anyway[/bright_cyan]")
+    
+    csv = email_xml_root.find("data")
+    csv_path = None if csv == None else csv.text
+    subject = email_xml_root.find("subject").text
+    html = email_xml_root.find("html")
+
+    send_email("nathan.watson@oasisbrislington.org", subject, html)
+
+
     
 # interpret_email("./email.xml")
 # send_emails("Nathan", "nathan.watson@oasisbrislington.org", "Here's 10 emails (not 100)", "./email.html")
@@ -133,4 +220,5 @@ if __name__ == "__main__":
         if not os.path.exists(path):
             console.log(f"[red]Incorrect arguments supplied. [/red][bright_cyan]{path}[/bright_cyan][red] is not a valid path[/red]")
             quit()
-        interpret_email(path)
+        # interpret_email(path)
+        interpret_email2(path)
