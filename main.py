@@ -1,7 +1,10 @@
+from codecs import replace_errors
 import json
-import tqdm
+import csv
+# import tqdm
 import os
 import smtplib
+from pyparsing import delimited_list
 from rich.console import Console
 import datetime
 import xmltodict
@@ -30,11 +33,24 @@ def _validate(instance, schema) -> bool:
         return False
     return True
 
-def send_email(to_email: str, subject: str, email_content: ET.Element, secret_path: str="./s--usr.pass"):
+def send_email(to_email: str, subject: str, email_content: ET.Element, csv_path: str, secret_path: str="./s--usr.pass"):
     to = f"<{to_email}>"
     subject = subject
     content = email_content
     secret_path = secret_path
+    csv_path = csv_path
+    with open(csv_path) as csv_file:
+        csv_reader =csv.reader(csv_file, delimiter=",")
+
+        replaces = {}
+        for line_index, row in enumerate(csv_reader):
+            if line_index == 0:
+                for property in row:
+                    replaces[property] = ""
+            else:
+                for i, property in enumerate(list(replaces.keys())):
+                    replaces[property] = row[i]
+            print(replaces)
 
     #? Login Info
     usrpass = open(secret_path, "r").readlines()
@@ -53,6 +69,7 @@ def send_email(to_email: str, subject: str, email_content: ET.Element, secret_pa
     parsed_string = minidom.parseString(raw_string)
     pretty_string = parsed_string.toprettyxml(indent="  ")
     content_html = "".join([line.strip() for line in pretty_string.split("\n") if line.strip()])
+    
 
     message.attach(MIMEText(content_html, "html"))
     try:
@@ -66,49 +83,49 @@ def send_email(to_email: str, subject: str, email_content: ET.Element, secret_pa
     except Exception as exception:
         console.print("[red]Error: %s[/red]\n\n" % exception)
 
-def send_emails(email_name: str, email_address: str, subject: str, email_content: str | ET.Element="./email.hmtl", secret_path: str="./s--usr.pass", count: int=1):
-    #? Changable Parameters
-    count = count
-    to = f"{email_name} <{email_address}>"
-    filename = email_content if type(email_content) == str else None
-    subject = subject
+# def send_emails(email_name: str, email_address: str, subject: str, email_content: str | ET.Element="./email.hmtl", secret_path: str="./s--usr.pass", count: int=1):
+#     #? Changable Parameters
+#     count = count
+#     to = f"{email_name} <{email_address}>"
+#     filename = email_content if type(email_content) == str else None
+#     subject = subject
 
-    #? Login Info
-    usrpass = open(secret_path, "r").readlines()
-    gmail_user = usrpass[0].strip()
-    gmail_app_password = usrpass[1].strip()
+#     #? Login Info
+#     usrpass = open(secret_path, "r").readlines()
+#     gmail_user = usrpass[0].strip()
+#     gmail_app_password = usrpass[1].strip()
 
-    sent_from = gmail_user
-    sent_to = to
+#     sent_from = gmail_user
+#     sent_to = to
 
-    #? Message Setup
-    message = MIMEMultipart("alternative")
-    message["Subject"] = subject
-    message["From"] = sent_from
-    message["To"] = sent_to
+#     #? Message Setup
+#     message = MIMEMultipart("alternative")
+#     message["Subject"] = subject
+#     message["From"] = sent_from
+#     message["To"] = sent_to
 
-    if filename == None:
-        raw_string = ET.tostring(email_content)
-        parsed_string = minidom.parseString(raw_string)
-        pretty_string = parsed_string.toprettyxml(indent="  ")
-        html = "".join([line.strip() for line in pretty_string.split("\n") if line.strip()])
-    else:
-        html = open(filename, "r").read()
-    part1 = MIMEText(html, "html")
-    message.attach(part1)
+#     if filename == None:
+#         raw_string = ET.tostring(email_content)
+#         parsed_string = minidom.parseString(raw_string)
+#         pretty_string = parsed_string.toprettyxml(indent="  ")
+#         html = "".join([line.strip() for line in pretty_string.split("\n") if line.strip()])
+#     else:
+#         html = open(filename, "r").read()
+#     part1 = MIMEText(html, "html")
+#     message.attach(part1)
 
-    try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.ehlo()
-        server.login(gmail_user, gmail_app_password)
-        console.log("[bright_green bold]Logged in[/bright_green bold]")
-        console.log(f"[bright_yellow]Sending {count} emails to {to}[/bright_yellow]")
-        for i in tqdm.tqdm(range(count)):
-            server.sendmail(sent_from, sent_to, message.as_string())
-            console.log(f"[bright_cyan]Sent email {i+1} out of {count}[/bright_cyan]")
-        server.close()
-    except Exception as exception:
-        console.print("[red]Error: %s[/red]\n\n" % exception)
+#     try:
+#         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+#         server.ehlo()
+#         server.login(gmail_user, gmail_app_password)
+#         console.log("[bright_green bold]Logged in[/bright_green bold]")
+#         console.log(f"[bright_yellow]Sending {count} emails to {to}[/bright_yellow]")
+#         for i in tqdm.tqdm(range(count)):
+#             server.sendmail(sent_from, sent_to, message.as_string())
+#             console.log(f"[bright_cyan]Sent email {i+1} out of {count}[/bright_cyan]")
+#         server.close()
+#     except Exception as exception:
+#         console.print("[red]Error: %s[/red]\n\n" % exception)
 
 def interpret_email(file_path: str):
     email_schema = {
@@ -204,7 +221,7 @@ def interpret_email2(email_path: str):
     subject = email_xml_root.find("subject").text
     html = email_xml_root.find("html")
 
-    send_email("nathan.watson@oasisbrislington.org", subject, html)
+    send_email("nathan.watson@oasisbrislington.org", subject, html, csv_path=csv_path)
 
 
     
