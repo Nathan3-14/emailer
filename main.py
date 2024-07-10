@@ -1,7 +1,7 @@
 from codecs import replace_errors
 import json
 import csv
-# import tqdm
+import re
 import os
 import smtplib
 from pyparsing import delimited_list
@@ -72,12 +72,15 @@ def send_email(to_email: str, subject: str, email_content: ET.Element, csv_path:
     
 
     message.attach(MIMEText(content_html, "html"))
+    # for replace_phrase, replace_string in replaces.items():
+    #     message_replaced = re.sub(rf"<r>{replace_phrase}</r>", replace_string, message.as_string())
     try:
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.ehlo()
         server.login(gmail_user, gmail_app_password)
         console.log("[bright_green bold]Logged in[/bright_green bold]")
         server.sendmail(sent_from, sent_to, message.as_string())
+        # server.sendmail(sent_from, sent_to, message_replaced)
         console.log(f"[bright_cyan]Sent email to {to}[/bright_cyan]")
         server.close()
     except Exception as exception:
