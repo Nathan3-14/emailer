@@ -50,7 +50,7 @@ def send_email(to_email: str, subject: str, email_content: ET.Element, csv_path:
             else:
                 for i, property in enumerate(list(replaces.keys())):
                     replaces[property] = row[i]
-            print(replaces)
+            console.log(replaces)
 
     #? Login Info
     usrpass = open(secret_path, "r").readlines()
@@ -69,8 +69,17 @@ def send_email(to_email: str, subject: str, email_content: ET.Element, csv_path:
     parsed_string = minidom.parseString(raw_string)
     pretty_string = parsed_string.toprettyxml(indent="  ")
     content_html = "".join([line.strip() for line in pretty_string.split("\n") if line.strip()])
-    
 
+    for match in re.findall(r"<r>.*?</r>", content_html):
+        match_replace = re.search(r"(?<=<r>).+(?=</r>)", match).group()
+        content_html = re.sub(rf"{match}", replaces[match_replace], content_html)
+        console.log(f"[magenta]Match string {match}, replaced with replaces[{match_replace}]")
+
+    # content_html_subbed = re.sub(r"<r>.*?</r>", "abcdabcd123123", content_html)
+    console.log(content_html)
+    # console.log(content_html_subbed)
+
+    # message.attach(MIMEText(content_html_subbed, "html"))
     message.attach(MIMEText(content_html, "html"))
     # for replace_phrase, replace_string in replaces.items():
     #     message_replaced = re.sub(rf"<r>{replace_phrase}</r>", replace_string, message.as_string())
