@@ -60,7 +60,7 @@ def replace_html(html_xml: ET.Element, replace: Dict[str, str]):
     html_string = ET.tostring(html_xml, encoding='unicode')
     
     for replace_phrase, replace_value in replace.items():
-        html_string = html_string.replace(f"<r>{replace_phrase}</r>", replace_value) #? isnt actually a string???
+        html_string = html_string.replace(f"~~{replace_phrase}~~", replace_value)
     
     return html_string
 
@@ -111,6 +111,8 @@ def interpret_email_file(file_path: str):
 
         replaces = {}
         for line_index, row in enumerate(csv_reader):
+            replaces = replaces.copy()
+
             if line_index == 0:
                 for property in row:
                     replaces[property] = ""
@@ -118,7 +120,7 @@ def interpret_email_file(file_path: str):
                 for i, property in enumerate(list(replaces.keys())):
                     replaces[property] = row[i]
             send_to_list.append(replaces)
-            console.log(f"[red]replaces added, is now [/red]{send_to_list}")
+            console.log(f"[red]replaces added {replaces["name"]}, is now [/red][blue]{send_to_list}[/blue]")
 
     subject = email_xml_root.find("subject").text
     html = email_xml_root.find("html")
@@ -131,8 +133,8 @@ def interpret_email_file(file_path: str):
         except KeyError:
             console.log("[red][bold]FATAL[/bold] - No name or email present in csv file")
         
-        console.log(f"[bright_cyan]Sending email to {to_email}[/bright_cyan]")
-        # send_email(to_email, subject, replace_html(html, data))
+        # console.log(f"[bright_cyan]Sending email to {to_email}[/bright_cyan]")
+        send_email(to_email, subject, replace_html(html, data))
 
 
 

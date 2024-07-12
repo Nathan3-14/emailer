@@ -1,9 +1,0 @@
-{
-    "email": {
-        "to": "<email_address>",
-        "subject": "<subject>",
-        "html": {
-            "html...": "html..."
-        }
-    }
-}

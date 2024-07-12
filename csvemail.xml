@@ -1,0 +1,26 @@
+<email>
+    <subject>Checkup</subject>
+    <html>
+        <body>
+            <style>
+                .main {
+                    font-family: monospace;
+                }
+                .dark {
+                    background-color: darkslategrey;
+                    color: white;
+                }
+                .light {
+                    background-color: white;
+                    color: black;
+                }
+            </style>
+            <div class="main ~~colour_scheme~~">
+                <h1>Test</h1>
+                <p>Hello ~~name~~, how are you doing today?</p>
+                <p>How was your ~~food~~ yesterday?</p>
+            </div>
+        </body>
+    </html>
+    <data>./csvtest.csv</data>
+</email>
