@@ -57,10 +57,10 @@ def send_email(to: str, subject: str, html_content: str, secret_path: str="s--us
 
 
 def replace_html(html_xml: ET.Element, replace: Dict[str, str]):
-    html_string = ET.tostring(html_xml)
+    html_string = ET.tostring(html_xml, encoding='unicode')
     
     for replace_phrase, replace_value in replace.items():
-        html_string.replace(f"<r>{replace_phrase}</r>", replace_value) #? isnt actually a string???
+        html_string = html_string.replace(f"<r>{replace_phrase}</r>", replace_value) #? isnt actually a string???
     
     return html_string
 
@@ -117,12 +117,13 @@ def interpret_email_file(file_path: str):
             else:
                 for i, property in enumerate(list(replaces.keys())):
                     replaces[property] = row[i]
-            console.log(replaces)
             send_to_list.append(replaces)
+            console.log(f"[red]replaces added, is now [/red]{send_to_list}")
 
     subject = email_xml_root.find("subject").text
     html = email_xml_root.find("html")
 
+    console.print(send_to_list)
     for data in send_to_list:
         try:
             to_name = data["name"]
@@ -130,7 +131,8 @@ def interpret_email_file(file_path: str):
         except KeyError:
             console.log("[red][bold]FATAL[/bold] - No name or email present in csv file")
         
-        send_email(to_email, subject, replace_html(html, data))
+        console.log(f"[bright_cyan]Sending email to {to_email}[/bright_cyan]")
+        # send_email(to_email, subject, replace_html(html, data))
 
 
 
